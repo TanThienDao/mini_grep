@@ -13,9 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Rust
-        uses: actions/setup-rust@v1
+        uses: actions/setup-rust@v1.7.2
         with:
           rust-version: stable
       - name: Build
         run: cargo build --verbose
-
