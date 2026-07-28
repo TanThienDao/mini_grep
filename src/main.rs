@@ -49,11 +49,11 @@ fn run<'a>(config: Config, contents: &'a str) -> Result<Vec<&'a str>, Box<dyn Er
     let results = if config.ignore_case {
         println!("Ignoring case");
         // Pass the borrowed contents
-        search_case_insensitive(&config.query, contents)
+        search_case_insensitive(&config.query, contents).collect()
     } else {
         println!("Not ignoring case");
         // Pass the borrowed contents
-        search(&config.query, contents)
+        search(&config.query, contents).collect()
     };
 
     Ok(results)
@@ -66,18 +66,16 @@ struct Config {
 }
 
 impl Config {
-    fn build(
-        mut args: impl Iterator<Item = String>,
-    ) -> Result<Config, &'static str> {
+    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
         args.next(); // Skip the program name
 
-        let query = match args.next(){
+        let query = match args.next() {
             Some(arg) => arg,
             None => return Err("Didn't get a query string"),
         };
         let file_path = match args.next() {
-            Some(arg)   => arg,
-            None        => return Err("Didn't get a file path"),
+            Some(arg) => arg,
+            None => return Err("Didn't get a file path"),
         };
         //let ignore_case = args.get(3).is_some();
         let ignore_case = env::var("IGNORE_CASE").is_ok();
