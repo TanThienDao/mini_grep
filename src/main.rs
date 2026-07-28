@@ -3,9 +3,9 @@ use std::error::Error;
 use std::{env, fs, process};
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    //let args: Vec<String> = env::args().collect();
 
-    let config = Config::build(&args).unwrap_or_else(|err| {
+    let config = Config::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
         process::exit(1);
     });
@@ -17,7 +17,8 @@ fn main() {
     });
 
     // Pass a reference to contents to the run function
-    let search_results = match run(config, &contents) { // Pass &contents
+    let search_results = match run(config, &contents) {
+        // Pass &contents
         Ok(results) => results,
         Err(e) => {
             eprintln!("Application error: {}", e);
@@ -65,15 +66,26 @@ struct Config {
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-        let query = args.get(1).expect("no query string provided").to_string();
-        let file_path = args.get(2).expect("no file path provided").to_string();
+    fn build(
+        mut args: impl Iterator<Item = String>,
+    ) -> Result<Config, &'static str> {
+        args.next(); // Skip the program name
+
+        let query = match args.next(){
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+        let file_path = match args.next() {
+            Some(arg)   => arg,
+            None        => return Err("Didn't get a file path"),
+        };
         //let ignore_case = args.get(3).is_some();
         let ignore_case = env::var("IGNORE_CASE").is_ok();
         println!("ignore_case: {}", ignore_case);
-        Ok(Self { query, file_path, ignore_case })
+        Ok(Self {
+            query,
+            file_path,
+            ignore_case,
+        })
     }
 }
