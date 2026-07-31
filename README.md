@@ -9,6 +9,21 @@
 - **Dynamic Error Propagation**: Utilizes `Box<dyn Error>` to handle various error types gracefully across the application.
 - **Case-Insensitive Search**: Optionally perform searches that ignore the case of the query string.
 
+## Design Choices
+
+### Returning `impl Iterator` vs. `Vec`
+
+The search functions (`search` and `search_case_insensitive`) are designed to return `impl Iterator<Item = &'a str>` instead of `Vec<&'a str>`. This design choice offers several significant advantages:
+
+1.  **Lazy Evaluation**:
+    *   When a function returns a `Vec`, all results are computed, collected, and stored in memory *before* the function returns. For large files or many matches, this can lead to high memory consumption and unnecessary computation if the caller only needs a subset of the results.
+    *   By returning `impl Iterator`, results are computed *on demand*. The iterator yields items one by one as requested by the consumer, leading to lower memory usage (only one item or a small buffer is in memory at a time) and more efficient computation (work stops as soon as the consumer has enough items).
+
+2.  **Flexibility and Composability**:
+    *   Returning an iterator allows the caller to directly chain other iterator methods (e.g., `map`, `filter`, `take`, `skip`) without intermediate conversions or allocations. This promotes a more functional programming style and makes the code more composable and often more readable.
+
+While `impl Iterator` is generally preferred for these reasons, it's important to note that when combining results from different `impl Iterator` sources (e.g., in an `if/else` block where each branch returns a different opaque `impl Iterator` type), Rust's type system requires a single, concrete return type. In such cases, explicitly `.collect()`ing the iterator into a `Vec` or another concrete collection type becomes necessary to satisfy the type checker.
+
 ## Getting Started
 
 ### Prerequisites
